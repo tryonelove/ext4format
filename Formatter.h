@@ -1,16 +1,18 @@
-#include <iostream>
+#ifndef FORMATTER_H
+#define FORMATTER_H
 
-using namespace std;
+#include <iostream>
+#include "Disk.h"
 
 class Formatter {
-    string formatPath;
     static Formatter* formatter;
-    Formatter();
+    Disk* disk;
+    Formatter(std::string path){
+        this->disk = new Disk(path);
+    };
     public:
-        static Formatter* getFormatter();
-
-        void setPath(string path);
-        string getPath();
-
+        static Formatter* getFormatter(std::string path);
         void format();
 };
+
+#endif

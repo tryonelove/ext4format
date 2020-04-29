@@ -12,11 +12,12 @@ enum LogLevel {
 
 class Logger{
     static Logger* logger;
-    LogLevel level = DEBUG;
-    
-    Logger(){};
+    LogLevel level;
+    Logger(LogLevel level){
+        this->level = level;
+    };
     public:
-        static Logger* getLogger(LogLevel level);
+        static Logger* getLogger(LogLevel level = DEBUG);
         void info(std::string message);
         void debug(std::string message);
         void error(std::string message);

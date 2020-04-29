@@ -1,11 +1,11 @@
 #include <iostream>
 #include "Logger.h"
 
-Logger* Logger::logger = nullptr; 
+Logger* Logger::logger = nullptr;
 
 Logger* Logger::getLogger(LogLevel level){
     if (!logger){
-        logger = new Logger;
+        logger = new Logger(level);
     }
     return logger;
 }
