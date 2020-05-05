@@ -13,6 +13,12 @@ using namespace std;
 Formatter* Formatter::formatter = nullptr; 
 
 Formatter* Formatter::getFormatter(string path){
+    /*
+    Get instance of Formatter class
+
+    @param path Path to format.
+    @return Formatter* instance.
+    */
     if (!formatter){
         formatter = new Formatter(path);
     }
@@ -20,8 +26,12 @@ Formatter* Formatter::getFormatter(string path){
 }
 
 void Formatter::format(){
-    char boot[1024];
-    ext2_super_block super_block;
-    ext2_inode inode_table;
-    ext2_group_desc first_block_descr;
+    /*
+    Main formatting function
+
+    @return Void
+    */
+    ext2_super_block super_block = disk->readSuperBlock();
+    ext4_group_desc first_block_descr = disk->readFirstBGD();
+    disk->writeEmptyInodes();
 }

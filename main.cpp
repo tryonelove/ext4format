@@ -1,5 +1,7 @@
 #include "Logger.h"
 #include "Formatter.h"
+#include <ext2fs/ext2_fs.h>
+
 
 using namespace std;
 

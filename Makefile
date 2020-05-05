@@ -1,5 +1,5 @@
 CC = g++
-CFLAGS = -Wall
+CFLAGS = -Wall -g
 SOURCES=main.cpp Logger.cpp Formatter.cpp
 
 all: format clean

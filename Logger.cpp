@@ -4,6 +4,14 @@
 Logger* Logger::logger = nullptr;
 
 Logger* Logger::getLogger(LogLevel level){
+    /*
+    Returns a logger instance.
+
+    @param level LogLevel variable that defines
+    logging level.
+
+    @return Logger class instance.
+    */
     if (!logger){
         logger = new Logger(level);
     }
