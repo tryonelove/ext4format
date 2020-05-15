@@ -1,11 +1,12 @@
 CC = g++
 CFLAGS = -Wall -g
+EXTFLAGS=-I/usr/include/ext2fs/ -lext2fs
 SOURCES=main.cpp Logger.cpp Formatter.cpp
 
 all: format clean
 
 format: main.o Formatter.o Disk.o Logger.o
-	$(CC) $(CFLAGS) main.o Formatter.o Disk.o Logger.o -o format
+	$(CC) $(CFLAGS) main.o Formatter.o Disk.o Logger.o -o format $(EXTFLAGS)
 
 main.o: main.cpp
 	$(CC) -c main.cpp

@@ -41,3 +41,7 @@ void Logger::warn(std::string message){
     if(this->level < WARN) return;
     std::cout << "WARN: " << message <<std::endl;
 }
+
+Logger::~Logger(){
+    delete logger;
+}

@@ -1,10 +1,11 @@
 #include <cstdlib>
 #include <linux/fs.h>
-#include <ext2fs/ext2_fs.h>
+#include <ext2fs/ext2fs.h>
 #include <iostream>
 #include <stdio.h>
 #include <fstream>
 #include <unistd.h>
+#include <vector>
 
 #include "Formatter.h"
 
@@ -31,7 +32,5 @@ void Formatter::format(){
 
     @return Void
     */
-    ext2_super_block super_block = disk->readSuperBlock();
-    ext4_group_desc first_block_descr = disk->readFirstBGD();
-    disk->writeEmptyInodes();
+   this->disk->clearInodes();
 }
