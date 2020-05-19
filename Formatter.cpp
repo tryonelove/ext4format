@@ -32,5 +32,7 @@ void Formatter::format(){
 
     @return Void
     */
-   this->disk->clearInodes();
+    this->disk->clearInodes();
+    this->disk->clearBitmaps();
+    this->disk->closeDisk();
 }

@@ -1,6 +1,6 @@
 CC = g++
 CFLAGS = -Wall -g
-EXTFLAGS=-I/usr/include/ext2fs/ -lext2fs
+EXTFLAGS=-lext2fs
 SOURCES=main.cpp Logger.cpp Formatter.cpp
 
 all: format clean

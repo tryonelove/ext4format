@@ -12,18 +12,19 @@
 
 class Disk{
     private:
-        ext2_filsys fs; // File descriptor
-        ext2_super_block sb; // Superblock
-        ext4_group_desc bg; // Block descriptor
+        ext2_filsys fs; // Filesystem handle
         int block_size_offset; // block size offset
 
         Logger* logger = logger->getLogger(LogLevel::DEBUG);
 
     public:
         Disk(std::string path);
-        ~Disk();
-
+        void clearBlockDescriptors();
+        void writeReservedInodes();
+        void readInodes();
+        void clearBitmaps();
         void clearInodes();
+        void closeDisk();
 };
 
 #endif

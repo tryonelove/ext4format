@@ -42,6 +42,10 @@ void Logger::warn(std::string message){
     std::cout << "WARN: " << message <<std::endl;
 }
 
+void Logger::success(){
+    std::cout << "Success!" << std::endl;
+}
+
 Logger::~Logger(){
     delete logger;
 }

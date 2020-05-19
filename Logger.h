@@ -23,6 +23,7 @@ class Logger{
         void debug(std::string message);
         void error(std::string message);
         void warn(std::string message);
+        void success();
         void setLevel(LogLevel level);
 };
 
