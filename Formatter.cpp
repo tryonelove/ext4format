@@ -32,7 +32,10 @@ void Formatter::format(){
 
     @return Void
     */
-    this->disk->clearInodes();
-    this->disk->clearBitmaps();
+    this->disk->allocateTables();
+    this->disk->writeInodeTable();
+    this->disk->createRootDir();
+    this->disk->createLostAndFound();
+    this->disk->reserveInodes();
     this->disk->closeDisk();
 }

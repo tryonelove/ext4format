@@ -43,7 +43,7 @@ void Logger::warn(std::string message){
 }
 
 void Logger::success(){
-    std::cout << "Success!" << std::endl;
+    this->info("Success!");
 }
 
 Logger::~Logger(){
