@@ -17,7 +17,7 @@ Formatter* Formatter::getFormatter(string path){
     /*
     Get instance of Formatter class
 
-    @param path Path to format.
+    @param path Path to the partition which has to be formatted.
     @return Formatter* instance.
     */
     if (!formatter){
@@ -29,8 +29,6 @@ Formatter* Formatter::getFormatter(string path){
 void Formatter::format(){
     /*
     Main formatting function
-
-    @return Void
     */
     this->disk->allocateTables();
     this->disk->writeInodeTable();

@@ -12,15 +12,15 @@
 
 class Disk{
     private:
-        const char* path;
+        const char* path; // Partition path
         ext2_filsys fs; // Filesystem handle
-        ext2_super_block fs_param;
-        int block_size_offset; // block size offset
+        ext2_super_block sb; // Superblock
 
         Logger* logger = logger->getLogger(LogLevel::DEBUG);
 
     public:
         Disk(std::string path);
+        void initialize();
         void allocateTables();
         
         void clearBlockDescriptors();
@@ -32,9 +32,7 @@ class Disk{
         void createRootDir();
         void createLostAndFound();
 
-        void readInodes();
         void clearBitmaps();
-        void clearInodes();
         void closeDisk();
 };
 

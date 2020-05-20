@@ -1,10 +1,6 @@
 #include <iostream>
 #include <ext2fs/ext2fs.h>
 #include <unistd.h>
-#include <fcntl.h>
-#include <stdlib.h>
-#include <vector>
-#include <sys/stat.h>
 #include "Disk.h"
 
 using namespace std;
@@ -14,23 +10,41 @@ Disk::Disk(string path){
 	this->path = path.c_str();
 }
 
-void Disk::allocateTables(){
-    errcode_t	retval;
+void Disk::initialize(){
+	/*
+	Initialize a filesystem
+	*/
+
+	errcode_t retval;
 
 	this->logger->info("Allocationg tables.");
 
 	initialize_ext2_error_table();
 
 	this->logger->info("Succesfuly initialized error table.");
-	memset(&this->fs_param, 0, sizeof(this->fs_param));
+	memset(&this->sb, 0, sizeof(this->sb));
 
-	ext2fs_blocks_count_set(&this->fs_param, 7569399*4);
+	// ext2fs_blocks_count_set(&this->fs_param, 7569399*4);
+	ext2fs_blocks_count_set(&this->sb, 1000000); // FIX
 
-	this->fs_param.s_feature_incompat |= EXT4_FEATURE_INCOMPAT_INLINE_DATA;
+	this->sb.s_feature_incompat |= EXT4_FEATURE_INCOMPAT_INLINE_DATA;
 
-	retval = ext2fs_initialize("/dev/sdd1", EXT2_FLAG_PRINT_PROGRESS, &this->fs_param,
+	retval = ext2fs_initialize("/dev/sdd1", EXT2_FLAG_PRINT_PROGRESS, &this->sb,
 				   unix_io_manager, &this->fs);
+		if (retval) {
+	this->logger->error("Error while initializing filesystem");
+		exit(1);
+    }
+
 	ext2fs_mark_super_dirty(this->fs); 
+}
+
+void Disk::allocateTables(){
+	/*
+	Allocate space for tables
+	*/
+	errcode_t retval;
+   
 	if (retval) {
 		this->logger->error("Error while initializing filesystem");
 		exit(1);
@@ -43,9 +57,13 @@ void Disk::allocateTables(){
 }
 
 void Disk::writeReservedInodes(){
+	/*
+	Write system 1-10 inodes
+	*/
+
 	errcode_t retval;
 	ext2_ino_t ino;
-	struct ext2_inode *inode;
+	ext2_inode *inode;
 
 	this->logger->info("Writing reserved inodes.");
 
@@ -58,30 +76,39 @@ void Disk::writeReservedInodes(){
 	for (ino = 1; ino < EXT2_FIRST_INO(fs->super); ino++) {
 		retval = ext2fs_write_inode_full(fs, ino, inode,
 						 EXT2_INODE_SIZE(fs->super));
+		if (retval) {
+			this->logger->error("Error while writing reserved inode.");
+			exit(1);
+		}
 	}
-	ext2fs_free_mem(&inode);
+	ext2fs_free_mem(&inode); // free inode
 	this->logger->success();
 }
 
 void Disk::createRootDir(){
+	/*
+	Create root dir in inode table
+	*/
+
     errcode_t retval;
 	ext2_inode inode;
 
 	this->logger->info("Creating root dir.");
 
+	// Create dir
 	retval = ext2fs_mkdir(fs, EXT2_ROOT_INO, EXT2_ROOT_INO, 0);
 	if (retval) {
 		this->logger->error("Error while creating root dir");
 		exit(1);
 	}
 
+	// Set up inode owner
 	if (getuid()) {
 		retval = ext2fs_read_inode(this->fs, EXT2_ROOT_INO, &inode);
 		if (retval) {
 			this->logger->error("Error while writing root dir");
 			exit(1);
 		}
-
 		inode.i_uid = getuid();
 		if (inode.i_uid)
 			inode.i_gid = getgid();
@@ -96,8 +123,9 @@ void Disk::createRootDir(){
 
 void Disk::createLostAndFound(){
 	/*
-	Method to create lost+found directory
+	Create lost+found directory
 	*/
+
     unsigned int lpf_size = 0;
 	errcode_t retval;
 	ext2_ino_t ino;
@@ -106,7 +134,8 @@ void Disk::createLostAndFound(){
 	this->fs->umask = 077;
 
 	this->logger->info("Creating lost+found directory.");
-
+	
+	// Create lost+found dir
 	retval = ext2fs_mkdir(this->fs, EXT2_ROOT_INO, 0, name);
 	if (retval) {
 		this->logger->error("Error while creating lost+found");
@@ -120,8 +149,6 @@ void Disk::createLostAndFound(){
 	}
 
 	for (i=1; i < EXT2_NDIR_BLOCKS; i++) {
-		/* Ensure that lost+found is at least 2 blocks, so we always
-		 * test large empty blocks for big-block filesystems.  */
 		if ((lpf_size += fs->blocksize) >= 16*1024 &&
 		    lpf_size >= 2 * fs->blocksize)
 			break;
@@ -136,9 +163,10 @@ void Disk::createLostAndFound(){
 
 void Disk::clearBitmaps(){
     /*
-    Method to clean all bitmaps (e.g. inode and block)
+    Clean all bitmaps (e.g. inode and block)
     */
-    int retval;
+
+    errcode_t retval;
     this->logger->info("Reading bitmaps.");
     retval = ext2fs_read_bitmaps(this->fs);
     if(retval){
@@ -154,6 +182,10 @@ void Disk::clearBitmaps(){
 }
 
 void Disk::writeInodeTable(){
+	/*
+	Write zeroed inode table
+	*/
+
     errcode_t retval;
 	blk64_t	blk;
 	dgrp_t	i;
@@ -167,7 +199,7 @@ void Disk::writeInodeTable(){
 					      EXT2_INODE_SIZE(fs->super),
 					      EXT2_BLOCK_SIZE(fs->super));
         ext2fs_bg_flags_set(fs, i, EXT2_BG_INODE_ZEROED);
-		ext2fs_zero_blocks2(fs, blk, num, &blk, &num);
+		// ext2fs_zero_blocks2(fs, blk, num, &blk, &num);
 	}
 
 	if (ext2fs_has_feature_metadata_csum(this->fs->super))
@@ -176,6 +208,10 @@ void Disk::writeInodeTable(){
 }
 
 void Disk::reserveInodes(){
+	/*
+	Reserve space for inodes
+	*/
+
 	ext2_ino_t	i;
 	for (i = EXT2_ROOT_INO + 1; i < EXT2_FIRST_INODE(this->fs->super); i++)
 		ext2fs_inode_alloc_stats2(this->fs, i, +1, 0);
@@ -184,6 +220,10 @@ void Disk::reserveInodes(){
 
 
 void Disk::closeDisk(){
+	/*
+	Close disk
+	*/
+
     ext2fs_flush(this->fs);
 	ext2fs_close_free(&this->fs);
 	this->logger->info("Done with updating the drive.");
