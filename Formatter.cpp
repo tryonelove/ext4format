@@ -32,6 +32,8 @@ void Formatter::format(){
 
     @return Void
     */
+    // this->disk->erase();
+    // this->disk->initialize();
     this->disk->allocateTables();
     this->disk->writeInodeTable();
     this->disk->createRootDir();

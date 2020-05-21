@@ -12,15 +12,17 @@
 
 class Disk{
     private:
-        const char* path;
+        string path; // Drive path
         ext2_filsys fs; // Filesystem handle
-        ext2_super_block fs_param;
-        int block_size_offset; // block size offset
+        ext2_super_block fs_param; // Superblock params
 
         Logger* logger = logger->getLogger(LogLevel::DEBUG);
-
+        void setSbParams();
     public:
         Disk(std::string path);
+
+        // void erase();
+        // void initialize();
         void allocateTables();
         
         void clearBlockDescriptors();

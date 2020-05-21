@@ -2,20 +2,44 @@
 #include <ext2fs/ext2fs.h>
 #include <unistd.h>
 #include <fcntl.h>
-#include <stdlib.h>
 #include <vector>
 #include <sys/stat.h>
 #include "Disk.h"
+#include <fstream>
 
 using namespace std;
 
 
 Disk::Disk(string path){
-	this->path = path.c_str();
+	this->path = path;
+}
+
+void Disk::setSbParams(){
+	errcode_t retval;
+	blk64_t dev_size;
+	retval = ext2fs_get_device_size2(this->path.c_str(),
+						EXT2_BLOCK_SIZE(&fs_param),
+						&dev_size);
+	if (retval) {
+		this->logger->error("Error while initializing filesystem");
+		exit(1);
+	}
+	this->fs_param.s_blocks_per_group = 32768; // Default blocks count per group
+	this->fs_param.s_inodes_per_group = 32768; // Default inodes per group
+	this->fs_param.s_default_mount_opts = EXT2_DEFM_XATTR_USER | EXT2_DEFM_ACL;
+	this->fs_param.s_log_block_size = 2; // Set block size to 4096
+	this->logger->info("Set block size to 4k.");
+
+	this->fs_param.s_feature_incompat |= EXT4_FEATURE_INCOMPAT_INLINE_DATA; // Set ext4 features
+
+	dev_size /= (4096 / 1024); // Calculate amount of blocks
+	
+	ext2fs_blocks_count_set(&this->fs_param, dev_size);
 }
 
 void Disk::allocateTables(){
-    errcode_t	retval;
+    errcode_t retval;
+	blk_t dev_size ;
 
 	this->logger->info("Allocationg tables.");
 
@@ -24,17 +48,14 @@ void Disk::allocateTables(){
 	this->logger->info("Succesfuly initialized error table.");
 	memset(&this->fs_param, 0, sizeof(this->fs_param));
 
-	ext2fs_blocks_count_set(&this->fs_param, 7569399*4);
-
-	this->fs_param.s_feature_incompat |= EXT4_FEATURE_INCOMPAT_INLINE_DATA;
-
-	retval = ext2fs_initialize("/dev/sdd1", EXT2_FLAG_PRINT_PROGRESS, &this->fs_param,
+	retval = ext2fs_initialize(this->path.c_str(), EXT2_FLAG_64BITS, &this->fs_param,
 				   unix_io_manager, &this->fs);
-	ext2fs_mark_super_dirty(this->fs); 
+	
 	if (retval) {
 		this->logger->error("Error while initializing filesystem");
 		exit(1);
 	}
+	ext2fs_mark_super_dirty(this->fs); 
 	retval = ext2fs_allocate_tables(this->fs);
 	if (retval) {
 		this->logger->error("Error while allocating tables for filesystem");
@@ -64,6 +85,9 @@ void Disk::writeReservedInodes(){
 }
 
 void Disk::createRootDir(){
+	/*
+	Create 1st inode root directory.
+	*/
     errcode_t retval;
 	ext2_inode inode;
 
